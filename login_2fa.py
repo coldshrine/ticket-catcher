@@ -1,7 +1,30 @@
+import os
 import time
 from playwright.sync_api import sync_playwright, TimeoutError
-
 from constants import JKS_FILE_PATH
+import subprocess
+
+def simulate_file_picker(file_path):
+    """
+    Simulates navigation and selection in the file picker using xdotool.
+
+    Args:
+    - file_path: The full path to the file to be selected.
+    """
+    folder_path = os.path.dirname(file_path)
+    file_name = os.path.basename(file_path)
+
+    # Simulate navigation in the file picker
+    commands = [
+        f'xdotool type "{folder_path}"',  # Type the folder path
+        "xdotool key Return",            # Press Enter to go to the folder
+        f'xdotool type "{file_name}"',   # Type the file name
+        "xdotool key Return"             # Press Enter to select the file
+    ]
+
+    for command in commands:
+        time.sleep(1)  # Wait between commands for stability
+        subprocess.run(command, shell=True)
 
 def open_login_page(page):
     """
@@ -37,7 +60,6 @@ def click_sign_up_button(page):
     # Wait for the page to load or stabilize after the click
     page.wait_for_load_state('networkidle')  # This waits for network activity to settle
 
-
 def click_electronic_signature_button(page):
     """
     Clicks the "Електронного підпису" button after navigating to the next page.
@@ -56,35 +78,24 @@ def click_electronic_signature_button(page):
 
 def upload_jks_file(page, file_path):
     """
-    Uploads a .jks file to the file input (dropbox) on the page.
+    Uploads a .jks file to the file input element on the page.
 
     Args:
-    - page: The Playwright page object
-    - file_path: The full path to the .jks file to be uploaded
+    - page: The Playwright page object.
+    - file_path: The full path to the .jks file to be uploaded.
     """
     try:
-        # Wait for the span element to be visible and clickable, which triggers the file input dialog
-        page.wait_for_selector('span.jss525:visible', timeout=20000)  # Adjust the selector if necessary
-        
-        # Click the span element by its exact text content
+        # Wait for the span element to appear and click it
+        page.wait_for_selector('span:has-text("оберіть його на своєму носієві")', timeout=20000)
         page.locator('span:has-text("оберіть його на своєму носієві")').click()
-        
-        # Wait for the file input element to be visible
-        page.wait_for_timeout(2000)  # Wait for 2 seconds to ensure the file input appears
-        
-        # Attempt to find and interact with the file input element
-        page.wait_for_selector('input[type="file"]:visible', timeout=20000)
-        
-        # Assuming there are multiple file input elements, adjust the index as per your observation
-        file_input = page.locator('input[type="file"]:visible').nth(0)  # Use nth(0) if it's the first visible file input
-        file_input.set_input_files(file_path)
+
+        # Use xdotool to simulate file selection in the file picker
+        simulate_file_picker(file_path)
         
         print(f"Successfully uploaded the file: {file_path}")
     except Exception as e:
         print(f"Failed to upload the file due to: {e}")
         raise
-
-
 
 def main():
     """
@@ -95,7 +106,7 @@ def main():
         browser = p.chromium.launch(headless=False)
         page = browser.new_page()
 
-        # Navigate to the page (assuming you are already there)
+        # Navigate to the page
         open_login_page(page)
         select_checkbox(page)
         click_sign_up_button(page)
