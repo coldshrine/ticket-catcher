@@ -12,18 +12,15 @@ def simulate_file_picker(file_path):
     - file_path: The full path to the file to be selected.
     """
     folder_path = os.path.dirname(file_path)
-    file_name = os.path.basename(file_path)
 
     # Simulate navigation in the file picker
     commands = [
         f'xdotool type "{folder_path}"',  # Type the folder path
-        "xdotool key Return",            # Press Enter to go to the folder
-        f'xdotool type "{file_name}"',   # Type the file name
         "xdotool key Return"             # Press Enter to select the file
     ]
 
     for command in commands:
-        time.sleep(1)  # Wait between commands for stability
+        time.sleep(1)
         subprocess.run(command, shell=True)
 
 def open_login_page(page):
@@ -32,7 +29,7 @@ def open_login_page(page):
     """
     try:
         page.goto("https://eq.hsc.gov.ua/")
-        page.wait_for_load_state('domcontentloaded')  # Ensuring the page is loaded properly
+        page.wait_for_load_state('domcontentloaded')
     except TimeoutError as e:
         print(f"Timeout while loading login page: {e}")
         raise
