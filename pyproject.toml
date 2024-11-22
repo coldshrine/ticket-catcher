@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "ticket-catcher"
+version = "0.1.0"
+description = "Tool for catching tickets in real time"
+authors = ["Karyna Zuyeva"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+playwright = "^1.48.0"
+requests = "^2.32.3"
+beautifulsoup4 = "^4.12.3"
+pandas = "^2.2.3"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.3"
+pytest-playwright = "^0.5.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
