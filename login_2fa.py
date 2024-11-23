@@ -107,6 +107,154 @@ def enter_password(page, password):
         logger.error(f"Error during password entry: {e}")
         raise
 
+
+def zpysatys_button(page):
+    """
+    Clicks on the "Записатись" sign-up button on the given page.
+
+    Args:
+        page (Page): A Playwright Page object to interact with the browser.
+    """
+    try:
+        # Use a more specific selector to target the correct button
+        button_selector = page.get_by_role("button", name="Записатись")
+        
+        # Ensure the button exists and log the count of matching elements
+        buttons_count = button_selector.count()
+        if buttons_count != 1:
+            logger.error(f"Expected 1 button but found {buttons_count} for selector 'Записатись'.")
+            return
+        
+        # Click the button
+        button_selector.click()
+        logger.info("Sign-up button clicked successfully.")
+    except Exception as e:
+        logger.error(f"Failed to click the sign-up button: {e}")
+
+        
+
+
+def select_practical_exam_link(page):
+    """
+    Clicks the "Практичний іспит" link on the given page.
+
+    Args:
+        page (Page): A Playwright Page object to interact with the browser.
+    """
+    try:
+        # Use a specific selector to target the "Практичний іспит" link
+        link_selector = page.get_by_role("link", name="Практичний іспит")
+        
+        # Ensure the link exists and log the count of matching elements
+        links_count = link_selector.count()
+        if links_count != 1:
+            logger.error(f"Expected 1 link but found {links_count} for selector 'Практичний іспит'.")
+            return
+        
+        # Click the link
+        link_selector.click()
+        logger.info("Practical exam link clicked successfully.")
+    except Exception as e:
+        logger.error(f"Failed to click the practical exam link: {e}")
+
+
+def click_practical_exam_school_vehicle_button(page):
+    """
+    Clicks the "Практичний іспит (транспортний засіб навчального закладу)" button on the page.
+
+    Args:
+        page (Page): A Playwright Page object to interact with the browser.
+    """
+    try:
+        # Use a specific selector to locate the button by its text
+        button_selector = page.get_by_role("button", name="Практичний іспит (транспортний засіб навчального закладу)")
+        
+        # Ensure the button exists and log the count of matching elements
+        buttons_count = button_selector.count()
+        if buttons_count != 1:
+            logger.error(f"Expected 1 button but found {buttons_count} for selector 'Практичний іспит (транспортний засіб навчального закладу)'.")
+            return
+        
+        # Click the button
+        button_selector.click()
+        logger.info("Practical exam school vehicle button clicked successfully.")
+    except Exception as e:
+        logger.error(f"Failed to click the practical exam school vehicle button: {e}")
+
+def click_successful_theory_exam_button(page):
+    """
+    Clicks the 'Так. Я успішно склав теоретичний іспит в сервісному центрі МВС.' button on the page,
+    with a 2-second delay before the click, by using both the 'data-target' attribute and button text.
+
+    Args:
+        page (Page): A Playwright Page object to interact with the browser.
+    """
+    try:
+        # Locate the button using both 'data-target' and the text of the button
+        button_selector = page.locator('button[data-target="#ModalCenter4"]:has-text("Так. Я успішно склав теоретичний іспит в сервісному центрі МВС.")')
+
+        # Wait for the button to be visible (optional)
+        button_selector.wait_for(state="visible")
+
+        # Wait for 2 seconds
+        logger.info("Waiting for 2 seconds before clicking the button...")
+        time.sleep(2)
+
+        # Click the button
+        button_selector.click()
+        logger.info("Successfully clicked the 'Так. Я успішно склав теоретичний іспит в сервісному центрі МВС.' button.")
+    except Exception as e:
+        logger.error(f"Failed to click the 'Так. Я успішно склав теоретичний іспит в сервісному центрі МВС.' button: {e}")
+
+def click_successful_exam_button(page):
+    """
+    Clicks the 'Так' button for the modal with data-target="#ModalCenter5", 
+    using the 'data-target' attribute and button text.
+
+    Args:
+        page (Page): A Playwright Page object to interact with the browser.
+    """
+    try:
+        # Locate the button using 'data-target' and the text of the button
+        button_selector = page.locator('button[data-target="#ModalCenter5"]:has-text("Так")')
+
+        # Wait for the button to be visible (optional)
+        button_selector.wait_for(state="visible")
+
+        # Wait for 2 seconds before clicking
+        logger.info("Waiting for 2 seconds before clicking the button...")
+        time.sleep(2)
+
+        # Click the button
+        button_selector.click()
+        logger.info("Successfully clicked the 'Так' button.")
+    except Exception as e:
+        logger.error(f"Failed to click the 'Так' button: {e}")
+
+def click_confirm_practical_exam_link(page):
+    """
+    Clicks the 'Практичний іспит на категорії B; BE' link button with the given href and data-params.
+
+    Args:
+        page (Page): A Playwright Page object to interact with the browser.
+    """
+    try:
+        # Locate the link by its href and visible text
+        link_selector = page.locator('a[href="/site/step1"]:has-text("Практичний іспит на категорії B; BE")')
+
+        # Wait for the link to be visible
+        link_selector.wait_for(state="visible")
+
+        # Wait for 2 seconds before clicking
+        logger.info("Waiting for 2 seconds before clicking the link...")
+        time.sleep(2)
+
+        # Click the link
+        link_selector.click()
+        logger.info("Successfully clicked the 'Практичний іспит на категорії B; BE' link.")
+    except Exception as e:
+        logger.error(f"Failed to click the 'Практичний іспит на категорії B; BE' link: {e}")
+
 def main():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False)
@@ -119,6 +267,12 @@ def main():
         password = extract_jks_password(PASSWORD_FILE_PATH)
         logger.info(f"Extracted password: {password}")
         enter_password(page, password)
+        zpysatys_button(page)
+        select_practical_exam_link(page)
+        click_practical_exam_school_vehicle_button(page)
+        click_successful_theory_exam_button(page)
+        click_successful_exam_button(page)
+        click_confirm_practical_exam_link(page)
         time.sleep(20)
         browser.close()
         logger.info("Browser session closed.")
