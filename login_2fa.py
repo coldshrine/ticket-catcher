@@ -1,13 +1,16 @@
 import os
 import time
+import logging
 from playwright.sync_api import sync_playwright, TimeoutError
-from constants import JKS_FILE_PATH, PASSWORD_FILE_PATH
 import subprocess
 
+from constants import JKS_FILE_PATH, PASSWORD_FILE_PATH
+
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 def simulate_file_picker(file_path):
-    """
-    Simulates navigation and selection in the file picker using xdotool.
-    """
     folder_path = os.path.dirname(file_path)
     commands = [
         f'xdotool type "{folder_path}"',
@@ -16,110 +19,92 @@ def simulate_file_picker(file_path):
     for command in commands:
         time.sleep(1)
         subprocess.run(command, shell=True)
+    logger.info(f"Simulated file picker for file: {file_path}")
 
 def open_login_page(page):
     try:
         page.goto("https://eq.hsc.gov.ua/")
         page.wait_for_load_state('domcontentloaded')
+        logger.info("Login page loaded successfully.")
     except TimeoutError as e:
-        print(f"Timeout while loading login page: {e}")
+        logger.error(f"Timeout while loading login page: {e}")
         raise
 
 def select_checkbox(page):
     try:
         page.wait_for_selector('input[type="checkbox"]', timeout=5000)
-        checkbox = page.locator('input[type="checkbox"]')
-        checkbox.click()
+        page.locator('input[type="checkbox"]').click()
+        logger.info("Checkbox selected.")
     except TimeoutError as e:
-        print(f"Timeout while selecting checkbox: {e}")
+        logger.error(f"Timeout while selecting checkbox: {e}")
         raise
 
 def click_sign_up_button(page):
     page.wait_for_selector('a.btn.btn-lg.btn-hsc-green_s')
-    button = page.locator('a.btn.btn-lg.btn-hsc-green_s')
-    button.click()
+    page.locator('a.btn.btn-lg.btn-hsc-green_s').click()
     page.wait_for_load_state('networkidle')
+    logger.info("Sign-up button clicked.")
 
 def click_electronic_signature_button(page):
     try:
         page.wait_for_selector('a.a1', timeout=5000)
-        sign_button = page.locator('a.a1', has_text="Електронного підпису")
-        sign_button.click()
+        page.locator('a.a1', has_text="Електронного підпису").click()
         page.wait_for_load_state('networkidle')
+        logger.info("Electronic signature button clicked.")
     except TimeoutError as e:
-        print(f"Timeout while clicking electronic signature button: {e}")
+        logger.error(f"Timeout while clicking electronic signature button: {e}")
         raise
 
-def upload_jks_file(page, file_path):
+def upload_file_jks(page, file_path):
     try:
         page.wait_for_selector('span:has-text("оберіть його на своєму носієві")', timeout=20000)
         page.locator('span:has-text("оберіть його на своєму носієві")').click()
         simulate_file_picker(file_path)
-        print(f"Successfully uploaded the file: {file_path}")
+        logger.info(f"Successfully uploaded file: {file_path}")
     except Exception as e:
-        print(f"Failed to upload the file due to: {e}")
+        logger.error(f"Failed to upload file {file_path}: {e}")
         raise
 
-def extract_password(file_path):
+def extract_jks_password(file_path):
     try:
         with open(file_path, 'r') as file:
             password = file.read().strip()
+        logger.info("Password extracted successfully.")
         return password
     except FileNotFoundError:
-        print(f"Password file not found at {file_path}")
+        logger.error(f"Password file not found at {file_path}")
         raise
     except Exception as e:
-        print(f"Error while reading password file: {e}")
+        logger.error(f"Error reading password file: {e}")
         raise
 
 def enter_password(page, password):
-    """
-    Enters the password into the input field and clicks the 'Продовжити' button twice with a delay.
-    """
     try:
-        # Wait for the password input field to be visible
         page.wait_for_selector('#PKeyPassword', timeout=5000)
         page.wait_for_function('document.querySelector("#PKeyPassword").offsetHeight > 0 && document.querySelector("#PKeyPassword").offsetWidth > 0')
-        is_visible = page.is_visible('#PKeyPassword')
-        is_enabled = page.is_enabled('#PKeyPassword')
-        print(f"Password input field visible: {is_visible}, enabled: {is_enabled}")
-
-        if not is_visible or not is_enabled:
-            print("Password input field is either not visible or not enabled.")
+        if not page.is_visible('#PKeyPassword') or not page.is_enabled('#PKeyPassword'):
+            logger.warning("Password field not visible or enabled.")
             return
         time.sleep(1)
-        
-        # Fill in the password
         page.fill('#PKeyPassword', password)
-        print(f"Password entered successfully: {password}")
+        logger.info("Password entered.")
 
-        # Function to click the "Продовжити" button
         def click_continue_button():
-            # Wait for the "Продовжити" button to be visible
             page.wait_for_selector('span.jss177', timeout=5000)
-            
-            # Use a more specific locator to select "Продовжити" button by text
             continue_button = page.locator('span.jss177:text("Продовжити")')
-            
-            # Ensure the button is visible and enabled
             if continue_button.is_visible() and continue_button.is_enabled():
-                # Simulate mouse hovering over the button
                 continue_button.hover()
-                time.sleep(0.5)  # Optional: give time for hover effects to trigger
-                
-                # Click the button after hovering
+                time.sleep(0.5)
                 continue_button.click()
-                print("Clicked the 'Продовжити' button.")
+                logger.info("Clicked 'Продовжити'.")
             else:
-                print("The 'Продовжити' button is not clickable.")
-        
-        # Click the "Продовжити" button twice with a delay
-        click_continue_button()  # First click
-        time.sleep(5)  # Delay between clicks (adjust as needed)
-        click_continue_button()  # Second click
+                logger.warning("Button not clickable.")
 
+        click_continue_button()
+        time.sleep(5)
+        click_continue_button()
     except Exception as e:
-        print(f"An error occurred while entering the password or clicking the button: {e}")
+        logger.error(f"Error during password entry: {e}")
         raise
 
 def main():
@@ -130,12 +115,13 @@ def main():
         select_checkbox(page)
         click_sign_up_button(page)
         click_electronic_signature_button(page)
-        upload_jks_file(page, JKS_FILE_PATH)
-        password = extract_password(PASSWORD_FILE_PATH)
-        print(password)
+        upload_file_jks(page, JKS_FILE_PATH)
+        password = extract_jks_password(PASSWORD_FILE_PATH)
+        logger.info(f"Extracted password: {password}")
         enter_password(page, password)
         time.sleep(20)
         browser.close()
+        logger.info("Browser session closed.")
 
 if __name__ == "__main__":
     main()
