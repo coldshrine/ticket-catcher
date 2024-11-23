@@ -72,13 +72,12 @@ def extract_password(file_path):
         print(f"Error while reading password file: {e}")
         raise
 
-import time
-
 def enter_password(page, password):
     """
-    Enters the password into the input field without clicking 'Продовжити'.
+    Enters the password into the input field and clicks the 'Продовжити' button twice with a delay.
     """
     try:
+        # Wait for the password input field to be visible
         page.wait_for_selector('#PKeyPassword', timeout=5000)
         page.wait_for_function('document.querySelector("#PKeyPassword").offsetHeight > 0 && document.querySelector("#PKeyPassword").offsetWidth > 0')
         is_visible = page.is_visible('#PKeyPassword')
@@ -90,14 +89,38 @@ def enter_password(page, password):
             return
         time.sleep(1)
         
+        # Fill in the password
         page.fill('#PKeyPassword', password)
         print(f"Password entered successfully: {password}")
+
+        # Function to click the "Продовжити" button
+        def click_continue_button():
+            # Wait for the "Продовжити" button to be visible
+            page.wait_for_selector('span.jss177', timeout=5000)
+            
+            # Use a more specific locator to select "Продовжити" button by text
+            continue_button = page.locator('span.jss177:text("Продовжити")')
+            
+            # Ensure the button is visible and enabled
+            if continue_button.is_visible() and continue_button.is_enabled():
+                # Simulate mouse hovering over the button
+                continue_button.hover()
+                time.sleep(0.5)  # Optional: give time for hover effects to trigger
+                
+                # Click the button after hovering
+                continue_button.click()
+                print("Clicked the 'Продовжити' button.")
+            else:
+                print("The 'Продовжити' button is not clickable.")
         
+        # Click the "Продовжити" button twice with a delay
+        click_continue_button()  # First click
+        time.sleep(5)  # Delay between clicks (adjust as needed)
+        click_continue_button()  # Second click
+
     except Exception as e:
-        print(f"An error occurred while entering the password: {e}")
+        print(f"An error occurred while entering the password or clicking the button: {e}")
         raise
-
-
 
 def main():
     with sync_playwright() as p:
