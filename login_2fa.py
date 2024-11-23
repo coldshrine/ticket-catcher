@@ -109,12 +109,6 @@ def enter_password(page, password):
 
 
 def zpysatys_button(page):
-    """
-    Clicks on the "Записатись" sign-up button on the given page.
-
-    Args:
-        page (Page): A Playwright Page object to interact with the browser.
-    """
     try:
         # Use a more specific selector to target the correct button
         button_selector = page.get_by_role("button", name="Записатись")
@@ -131,16 +125,8 @@ def zpysatys_button(page):
     except Exception as e:
         logger.error(f"Failed to click the sign-up button: {e}")
 
-        
-
-
 def select_practical_exam_link(page):
-    """
-    Clicks the "Практичний іспит" link on the given page.
 
-    Args:
-        page (Page): A Playwright Page object to interact with the browser.
-    """
     try:
         # Use a specific selector to target the "Практичний іспит" link
         link_selector = page.get_by_role("link", name="Практичний іспит")
@@ -159,12 +145,7 @@ def select_practical_exam_link(page):
 
 
 def click_practical_exam_school_vehicle_button(page):
-    """
-    Clicks the "Практичний іспит (транспортний засіб навчального закладу)" button on the page.
 
-    Args:
-        page (Page): A Playwright Page object to interact with the browser.
-    """
     try:
         # Use a specific selector to locate the button by its text
         button_selector = page.get_by_role("button", name="Практичний іспит (транспортний засіб навчального закладу)")
@@ -182,13 +163,7 @@ def click_practical_exam_school_vehicle_button(page):
         logger.error(f"Failed to click the practical exam school vehicle button: {e}")
 
 def click_successful_theory_exam_button(page):
-    """
-    Clicks the 'Так. Я успішно склав теоретичний іспит в сервісному центрі МВС.' button on the page,
-    with a 2-second delay before the click, by using both the 'data-target' attribute and button text.
 
-    Args:
-        page (Page): A Playwright Page object to interact with the browser.
-    """
     try:
         # Locate the button using both 'data-target' and the text of the button
         button_selector = page.locator('button[data-target="#ModalCenter4"]:has-text("Так. Я успішно склав теоретичний іспит в сервісному центрі МВС.")')
@@ -207,13 +182,7 @@ def click_successful_theory_exam_button(page):
         logger.error(f"Failed to click the 'Так. Я успішно склав теоретичний іспит в сервісному центрі МВС.' button: {e}")
 
 def click_successful_exam_button(page):
-    """
-    Clicks the 'Так' button for the modal with data-target="#ModalCenter5", 
-    using the 'data-target' attribute and button text.
 
-    Args:
-        page (Page): A Playwright Page object to interact with the browser.
-    """
     try:
         # Locate the button using 'data-target' and the text of the button
         button_selector = page.locator('button[data-target="#ModalCenter5"]:has-text("Так")')
@@ -232,12 +201,7 @@ def click_successful_exam_button(page):
         logger.error(f"Failed to click the 'Так' button: {e}")
 
 def click_confirm_practical_exam_link(page):
-    """
-    Clicks the 'Практичний іспит на категорії B; BE' link button with the given href and data-params.
 
-    Args:
-        page (Page): A Playwright Page object to interact with the browser.
-    """
     try:
         # Locate the link by its href and visible text
         link_selector = page.locator('a[href="/site/step1"]:has-text("Практичний іспит на категорії B; BE")')
@@ -256,13 +220,7 @@ def click_confirm_practical_exam_link(page):
         logger.error(f"Failed to click the 'Практичний іспит на категорії B; BE' link: {e}")
 
 def click_first_date_link(page):
-    """
-    Clicks the first 'субота' link (anchor tag) on the page, identified by its class.
-    This function will click the first link regardless of the date text.
 
-    Args:
-        page (Page): A Playwright Page object to interact with the browser.
-    """
     try:
         # Locate the first anchor tag with the specified class, regardless of the date text
         link_selector = page.locator('a.btn.btn-lg.icon-btn.btn-hsc-green.text-center').nth(0)
@@ -279,6 +237,52 @@ def click_first_date_link(page):
         logger.info("Successfully clicked the first date link.")
     except Exception as e:
         logger.error(f"Failed to click the first date link: {e}")
+
+def click_and_check_talons(page):
+    try:
+        right_arrow_selector = 'i.fa.fa-arrow-circle-right.fa-2x'
+        left_arrow_selector = 'i.fa.fa-arrow-circle-left.fa-2x'
+        talon_icon_selector = 'img[src="/images/hsc_s.png"][style*="transform: translate3d(304px, 315px, 0px)"]'
+        talon_present_selector = 'img[src="/images/hsc_i.png"]:first-child'
+        
+        # Counter for the clicks
+        right_click_count = 0
+        left_click_count = 0
+        
+        while True:
+            if right_click_count < 20:
+                page.locator(right_arrow_selector).click()
+                right_click_count += 1
+                logger.info(f"Clicked the next button {right_click_count} times.")
+            else:
+                # After 20 right clicks, switch to left arrow clicks
+                page.locator(left_arrow_selector).click()
+                left_click_count += 1
+                logger.info(f"Clicked the previous button {left_click_count} times.")
+                
+                # Reset right click count after switching to left
+                if left_click_count == 20:
+                    right_click_count = 0
+                    left_click_count = 0
+
+            # Wait for talon icon to appear
+            talon_icon = page.locator(talon_icon_selector)
+            talon_icon.wait_for(state="visible")
+        
+            talon_icon.first.hover()
+            logger.info("Hovered over the talon icon.")
+
+            talon_present = page.locator(talon_present_selector).is_visible()
+
+            if talon_present:
+                print("є талони на сайті м. Івано-Франківськ, вул. Є Коновальця 229")
+            else:
+                print("немає талонів")
+            
+            time.sleep(1)
+
+    except Exception as e:
+        logger.error(f"Error during talon check process: {e}")
 
 def main():
     with sync_playwright() as p:
@@ -299,6 +303,7 @@ def main():
         click_successful_exam_button(page)
         click_confirm_practical_exam_link(page)
         click_first_date_link(page)
+        click_and_check_talons(page)
         time.sleep(60000)
         logger.info("Browser session closed.")
 
