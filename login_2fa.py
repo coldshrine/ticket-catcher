@@ -255,6 +255,31 @@ def click_confirm_practical_exam_link(page):
     except Exception as e:
         logger.error(f"Failed to click the 'Практичний іспит на категорії B; BE' link: {e}")
 
+def click_first_date_link(page):
+    """
+    Clicks the first 'субота' link (anchor tag) on the page, identified by its class.
+    This function will click the first link regardless of the date text.
+
+    Args:
+        page (Page): A Playwright Page object to interact with the browser.
+    """
+    try:
+        # Locate the first anchor tag with the specified class, regardless of the date text
+        link_selector = page.locator('a.btn.btn-lg.icon-btn.btn-hsc-green.text-center').nth(0)
+
+        # Wait for the link to be visible
+        link_selector.wait_for(state="visible")
+
+        # Wait for 2 seconds before clicking
+        logger.info("Waiting for 2 seconds before clicking the link...")
+        time.sleep(2)
+
+        # Click the first link
+        link_selector.click()
+        logger.info("Successfully clicked the first date link.")
+    except Exception as e:
+        logger.error(f"Failed to click the first date link: {e}")
+
 def main():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False)
@@ -273,8 +298,8 @@ def main():
         click_successful_theory_exam_button(page)
         click_successful_exam_button(page)
         click_confirm_practical_exam_link(page)
-        time.sleep(20)
-        browser.close()
+        click_first_date_link(page)
+        time.sleep(60000)
         logger.info("Browser session closed.")
 
 if __name__ == "__main__":
