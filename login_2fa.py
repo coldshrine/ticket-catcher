@@ -4,7 +4,7 @@ import logging
 from playwright.sync_api import sync_playwright, TimeoutError
 import subprocess
 
-from constants import JKS_FILE_PATH, PASSWORD_FILE_PATH
+from constants import JKS_FILE_PATH_WINDOWS, PASSWORD_FILE_PATH_WINDOWS, PASSWORD_FILE_PATH_MAC, JKS_FILE_PATH_MAC
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -55,20 +55,60 @@ def click_electronic_signature_button(page):
         logger.error(f"Timeout while clicking electronic signature button: {e}")
         raise
 
+### This is approach for Windows machines. Uncomment if necessary.
+#def upload_file_jks(page, file_path):
+#    try:
+#        page.wait_for_selector('span:has-text("оберіть його на своєму носієві")', timeout=20000)
+#        page.locator('span:has-text("оберіть його на своєму носієві")').click()
+#       simulate_file_picker(file_path)
+#        logger.info(f"Successfully uploaded file: {file_path}")
+#    except Exception as e:
+#        logger.error(f"Failed to upload file {file_path}: {e}")
+#        raise
+
+
+### This is approach for Windows machines. Uncomment if necessary.
+#def extract_jks_password(file_path):
+#    try:
+#        with open(file_path, 'r') as file:
+#            password = file.read().strip()
+#        logger.info("Password extracted successfully.")
+#        return password
+#    except FileNotFoundError:
+#        logger.error(f"Password file not found at {file_path}")
+#        raise
+#    except Exception as e:
+#        logger.error(f"Error reading password file: {e}")
+#        raise
+
+
 def upload_file_jks(page, file_path):
     try:
-        page.wait_for_selector('span:has-text("оберіть його на своєму носієві")', timeout=20000)
-        page.locator('span:has-text("оберіть його на своєму носієві")').click()
-        simulate_file_picker(file_path)
+        # Используем id конкретного элемента
+        file_input = page.locator('input#PKeyFileInput')  # Локатор для элемента загрузки JKS
+        file_input.set_input_files(file_path)
         logger.info(f"Successfully uploaded file: {file_path}")
     except Exception as e:
         logger.error(f"Failed to upload file {file_path}: {e}")
         raise
 
+
 def extract_jks_password(file_path):
+    """
+    Extract the JKS password from a file.
+
+    Args:
+        file_path: Path to the password file.
+
+    Returns:
+        str: Extracted password.
+    """
     try:
+        logger.info(f"Extracting password from: {file_path}")
+        
         with open(file_path, 'r') as file:
             password = file.read().strip()
+        
         logger.info("Password extracted successfully.")
         return password
     except FileNotFoundError:
@@ -292,8 +332,10 @@ def main():
         select_checkbox(page)
         click_sign_up_button(page)
         click_electronic_signature_button(page)
-        upload_file_jks(page, JKS_FILE_PATH)
-        password = extract_jks_password(PASSWORD_FILE_PATH)
+        #upload_file_jks(page, JKS_FILE_PATH_WINDOWS)
+        #password = extract_jks_password(PASSWORD_FILE_PATH_WINDOWS)
+        upload_file_jks(page, JKS_FILE_PATH_MAC)
+        password = extract_jks_password(PASSWORD_FILE_PATH_MAC)
         logger.info(f"Extracted password: {password}")
         enter_password(page, password)
         zpysatys_button(page)
