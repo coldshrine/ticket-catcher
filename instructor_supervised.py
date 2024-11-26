@@ -4,7 +4,7 @@ import logging
 from playwright.sync_api import sync_playwright, TimeoutError
 import subprocess
 
-from constants import JKS_FILE_PATH, PASSWORD_FILE_PATH
+from constants import PASSWORD_FILE_PATH_MAC, JKS_FILE_PATH_MAC
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -55,20 +55,25 @@ def click_electronic_signature_button(page):
         logger.error(f"Timeout while clicking electronic signature button: {e}")
         raise
 
+
 def upload_file_jks(page, file_path):
     try:
-        page.wait_for_selector('span:has-text("оберіть його на своєму носієві")', timeout=20000)
-        page.locator('span:has-text("оберіть його на своєму носієві")').click()
-        simulate_file_picker(file_path)
+        # Используем id конкретного элемента
+        file_input = page.locator('input#PKeyFileInput')  # Локатор для элемента загрузки JKS
+        file_input.set_input_files(file_path)
         logger.info(f"Successfully uploaded file: {file_path}")
     except Exception as e:
         logger.error(f"Failed to upload file {file_path}: {e}")
         raise
 
+
 def extract_jks_password(file_path):
     try:
+        logger.info(f"Extracting password from: {file_path}")
+        
         with open(file_path, 'r') as file:
             password = file.read().strip()
+        
         logger.info("Password extracted successfully.")
         return password
     except FileNotFoundError:
@@ -110,34 +115,26 @@ def enter_password(page, password):
 
 def zpysatys_button(page):
     try:
-        # Use a more specific selector to target the correct button
         button_selector = page.get_by_role("button", name="Записатись")
-        
-        # Ensure the button exists and log the count of matching elements
         buttons_count = button_selector.count()
         if buttons_count != 1:
             logger.error(f"Expected 1 button but found {buttons_count} for selector 'Записатись'.")
             return
         
-        # Click the button
         button_selector.click()
         logger.info("Sign-up button clicked successfully.")
     except Exception as e:
         logger.error(f"Failed to click the sign-up button: {e}")
 
 def select_practical_exam_link(page):
-
     try:
-        # Use a specific selector to target the "Практичний іспит" link
         link_selector = page.get_by_role("link", name="Практичний іспит")
         
-        # Ensure the link exists and log the count of matching elements
         links_count = link_selector.count()
         if links_count != 1:
             logger.error(f"Expected 1 link but found {links_count} for selector 'Практичний іспит'.")
             return
         
-        # Click the link
         link_selector.click()
         logger.info("Practical exam link clicked successfully.")
     except Exception as e:
@@ -147,16 +144,13 @@ def select_practical_exam_link(page):
 def click_practical_exam_school_vehicle_button(page):
 
     try:
-        # Use a specific selector to locate the button by its text
         button_selector = page.get_by_role("button", name="Практичний іспит (транспортний засіб навчального закладу)")
         
-        # Ensure the button exists and log the count of matching elements
         buttons_count = button_selector.count()
         if buttons_count != 1:
             logger.error(f"Expected 1 button but found {buttons_count} for selector 'Практичний іспит (транспортний засіб навчального закладу)'.")
             return
         
-        # Click the button
         button_selector.click()
         logger.info("Practical exam school vehicle button clicked successfully.")
     except Exception as e:
@@ -165,17 +159,12 @@ def click_practical_exam_school_vehicle_button(page):
 def click_successful_theory_exam_button(page):
 
     try:
-        # Locate the button using both 'data-target' and the text of the button
         button_selector = page.locator('button[data-target="#ModalCenter4"]:has-text("Так. Я успішно склав теоретичний іспит в сервісному центрі МВС.")')
-
-        # Wait for the button to be visible (optional)
         button_selector.wait_for(state="visible")
 
-        # Wait for 2 seconds
         logger.info("Waiting for 2 seconds before clicking the button...")
         time.sleep(2)
 
-        # Click the button
         button_selector.click()
         logger.info("Successfully clicked the 'Так. Я успішно склав теоретичний іспит в сервісному центрі МВС.' button.")
     except Exception as e:
@@ -184,17 +173,12 @@ def click_successful_theory_exam_button(page):
 def click_successful_exam_button(page):
 
     try:
-        # Locate the button using 'data-target' and the text of the button
         button_selector = page.locator('button[data-target="#ModalCenter5"]:has-text("Так")')
-
-        # Wait for the button to be visible (optional)
         button_selector.wait_for(state="visible")
 
-        # Wait for 2 seconds before clicking
         logger.info("Waiting for 2 seconds before clicking the button...")
         time.sleep(2)
 
-        # Click the button
         button_selector.click()
         logger.info("Successfully clicked the 'Так' button.")
     except Exception as e:
@@ -203,17 +187,12 @@ def click_successful_exam_button(page):
 def click_confirm_practical_exam_link(page):
 
     try:
-        # Locate the link by its href and visible text
         link_selector = page.locator('a[href="/site/step1"]:has-text("Практичний іспит на категорії B; BE")')
-
-        # Wait for the link to be visible
         link_selector.wait_for(state="visible")
 
-        # Wait for 2 seconds before clicking
         logger.info("Waiting for 2 seconds before clicking the link...")
         time.sleep(2)
 
-        # Click the link
         link_selector.click()
         logger.info("Successfully clicked the 'Практичний іспит на категорії B; BE' link.")
     except Exception as e:
@@ -222,17 +201,12 @@ def click_confirm_practical_exam_link(page):
 def click_first_date_link(page):
 
     try:
-        # Locate the first anchor tag with the specified class, regardless of the date text
         link_selector = page.locator('a.btn.btn-lg.icon-btn.btn-hsc-green.text-center').nth(0)
-
-        # Wait for the link to be visible
         link_selector.wait_for(state="visible")
 
-        # Wait for 2 seconds before clicking
         logger.info("Waiting for 2 seconds before clicking the link...")
         time.sleep(2)
 
-        # Click the first link
         link_selector.click()
         logger.info("Successfully clicked the first date link.")
     except Exception as e:
@@ -245,27 +219,23 @@ def click_and_check_talons(page):
         talon_icon_selector = 'img[src="/images/hsc_s.png"][style*="transform: translate3d(304px, 315px, 0px)"]'
         talon_present_selector = 'img[src="/images/hsc_i.png"]:first-child'
         
-        # Counter for the clicks
         right_click_count = 0
         left_click_count = 0
         
         while True:
-            if right_click_count < 20:
+            if right_click_count < 18:
                 page.locator(right_arrow_selector).click()
                 right_click_count += 1
                 logger.info(f"Clicked the next button {right_click_count} times.")
             else:
-                # After 20 right clicks, switch to left arrow clicks
                 page.locator(left_arrow_selector).click()
                 left_click_count += 1
                 logger.info(f"Clicked the previous button {left_click_count} times.")
                 
-                # Reset right click count after switching to left
-                if left_click_count == 20:
+                if left_click_count == 18:
                     right_click_count = 0
                     left_click_count = 0
 
-            # Wait for talon icon to appear
             talon_icon = page.locator(talon_icon_selector)
             talon_icon.wait_for(state="visible")
         
@@ -292,8 +262,8 @@ def main():
         select_checkbox(page)
         click_sign_up_button(page)
         click_electronic_signature_button(page)
-        upload_file_jks(page, JKS_FILE_PATH)
-        password = extract_jks_password(PASSWORD_FILE_PATH)
+        upload_file_jks(page, JKS_FILE_PATH_MAC)
+        password = extract_jks_password(PASSWORD_FILE_PATH_MAC)
         logger.info(f"Extracted password: {password}")
         enter_password(page, password)
         zpysatys_button(page)
@@ -304,7 +274,6 @@ def main():
         click_confirm_practical_exam_link(page)
         click_first_date_link(page)
         click_and_check_talons(page)
-        time.sleep(60000)
         logger.info("Browser session closed.")
 
 if __name__ == "__main__":
