@@ -4,7 +4,6 @@
 
 ## Features
 - **Ticket Monitoring**: Automatically tracks tickets related to the driving license exam in Ukraine (UA).
-- **2FA Support**: The project includes functionality for handling two-factor authentication (2FA).
 - **Customizable**: Can be modified and extended for different use cases related to exam ticket monitoring.
 
 ## Installation
