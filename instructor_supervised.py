@@ -6,7 +6,6 @@ import subprocess
 
 from constants import PASSWORD_FILE_PATH_MAC, JKS_FILE_PATH_MAC
 
-
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -40,10 +39,14 @@ def select_checkbox(page):
         raise
 
 def click_sign_up_button(page):
-    page.wait_for_selector('a.btn.btn-lg.btn-hsc-green_s')
-    page.locator('a.btn.btn-lg.btn-hsc-green_s').click()
-    page.wait_for_load_state('networkidle')
-    logger.info("Sign-up button clicked.")
+    try:
+        page.wait_for_selector('a.btn.btn-lg.btn-hsc-green_s')
+        page.locator('a.btn.btn-lg.btn-hsc-green_s').click()
+        page.wait_for_load_state('networkidle')
+        logger.info("Sign-up button clicked.")
+    except TimeoutError as e:
+        logger.error(f"Timeout while clicking sign-up button: {e}")
+        raise
 
 def click_electronic_signature_button(page):
     try:
@@ -55,17 +58,14 @@ def click_electronic_signature_button(page):
         logger.error(f"Timeout while clicking electronic signature button: {e}")
         raise
 
-
 def upload_file_jks(page, file_path):
     try:
-        # Используем id конкретного элемента
-        file_input = page.locator('input#PKeyFileInput')  # Локатор для элемента загрузки JKS
+        file_input = page.locator('input#PKeyFileInput')  # Locator for JKS file input
         file_input.set_input_files(file_path)
         logger.info(f"Successfully uploaded file: {file_path}")
     except Exception as e:
         logger.error(f"Failed to upload file {file_path}: {e}")
         raise
-
 
 def extract_jks_password(file_path):
     try:
@@ -112,7 +112,6 @@ def enter_password(page, password):
         logger.error(f"Error during password entry: {e}")
         raise
 
-
 def zpysatys_button(page):
     try:
         button_selector = page.get_by_role("button", name="Записатись")
@@ -140,9 +139,7 @@ def select_practical_exam_link(page):
     except Exception as e:
         logger.error(f"Failed to click the practical exam link: {e}")
 
-
 def click_practical_exam_school_vehicle_button(page):
-
     try:
         button_selector = page.get_by_role("button", name="Практичний іспит (транспортний засіб навчального закладу)")
         
@@ -157,7 +154,6 @@ def click_practical_exam_school_vehicle_button(page):
         logger.error(f"Failed to click the practical exam school vehicle button: {e}")
 
 def click_successful_theory_exam_button(page):
-
     try:
         button_selector = page.locator('button[data-target="#ModalCenter4"]:has-text("Так. Я успішно склав теоретичний іспит в сервісному центрі МВС.")')
         button_selector.wait_for(state="visible")
@@ -171,7 +167,6 @@ def click_successful_theory_exam_button(page):
         logger.error(f"Failed to click the 'Так. Я успішно склав теоретичний іспит в сервісному центрі МВС.' button: {e}")
 
 def click_successful_exam_button(page):
-
     try:
         button_selector = page.locator('button[data-target="#ModalCenter5"]:has-text("Так")')
         button_selector.wait_for(state="visible")
@@ -185,7 +180,6 @@ def click_successful_exam_button(page):
         logger.error(f"Failed to click the 'Так' button: {e}")
 
 def click_confirm_practical_exam_link(page):
-
     try:
         link_selector = page.locator('a[href="/site/step1"]:has-text("Практичний іспит на категорії B; BE")')
         link_selector.wait_for(state="visible")
@@ -199,7 +193,6 @@ def click_confirm_practical_exam_link(page):
         logger.error(f"Failed to click the 'Практичний іспит на категорії B; BE' link: {e}")
 
 def click_first_date_link(page):
-
     try:
         link_selector = page.locator('a.btn.btn-lg.icon-btn.btn-hsc-green.text-center').nth(0)
         link_selector.wait_for(state="visible")
@@ -237,22 +230,17 @@ def click_and_check_talons(page):
                     left_click_count = 0
 
             talon_icon = page.locator(talon_icon_selector)
-            talon_icon.wait_for(state="visible")
-        
-            talon_icon.first.hover()
-            logger.info("Hovered over the talon icon.")
-
-            talon_present = page.locator(talon_present_selector).is_visible()
-
-            if talon_present:
-                print("є талони на сайті м. Івано-Франківськ, вул. Є Коновальця 229")
-            else:
-                print("немає талонів")
+            talon_present = page.locator(talon_present_selector)
             
-            time.sleep(1)
+            if talon_present.is_visible():
+                logger.info("Available talons found.")
+                break
 
+            logger.info("No talon found yet. Retrying in 2 seconds...")
+            time.sleep(2)
     except Exception as e:
-        logger.error(f"Error during talon check process: {e}")
+        logger.error(f"Error while clicking talons: {e}")
+        raise
 
 def main():
     with sync_playwright() as p:
