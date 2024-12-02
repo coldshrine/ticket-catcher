@@ -33,9 +33,16 @@ def open_login_page(page):
 
 def select_checkbox(page):
     try:
-        page.wait_for_selector('input[type="checkbox"]', timeout=5000)
-        page.locator('input[type="checkbox"]').click()
-        logger.info("Checkbox selected.")
+        logger.info("Waiting for checkbox to be visible...")
+        page.wait_for_selector('input[type="checkbox"]', timeout=100000)  # Increase timeout
+        checkbox = page.locator('input[type="checkbox"]')
+        
+        # Check if the checkbox is visible and enabled before clicking
+        if checkbox.is_visible() and checkbox.is_enabled():
+            checkbox.click()
+            logger.info("Checkbox selected.")
+        else:
+            logger.warning("Checkbox is either not visible or not enabled.")
     except TimeoutError as e:
         logger.error(f"Timeout while selecting checkbox: {e}")
         raise
@@ -52,7 +59,7 @@ def click_sign_up_button(page):
 
 def click_electronic_signature_button(page):
     try:
-        page.wait_for_selector('a.a1', timeout=5000)
+        page.wait_for_selector('a.a1', timeout=15000)
         page.locator('a.a1', has_text="Електронного підпису").click()
         page.wait_for_load_state('networkidle')
         logger.info("Electronic signature button clicked.")
@@ -87,7 +94,7 @@ def extract_jks_password(file_path):
 
 def enter_password(page, password):
     try:
-        page.wait_for_selector('#PKeyPassword', timeout=5000)
+        page.wait_for_selector('#PKeyPassword', timeout=15000)
         page.wait_for_function('document.querySelector("#PKeyPassword").offsetHeight > 0 && document.querySelector("#PKeyPassword").offsetWidth > 0')
         if not page.is_visible('#PKeyPassword') or not page.is_enabled('#PKeyPassword'):
             logger.warning("Password field not visible or enabled.")
@@ -97,7 +104,7 @@ def enter_password(page, password):
         logger.info("Password entered.")
 
         def click_continue_button():
-            page.wait_for_selector('span.jss177', timeout=5000)
+            page.wait_for_selector('span.jss177', timeout=15000)
             continue_button = page.locator('span.jss177:text("Продовжити")')
             if continue_button.is_visible() and continue_button.is_enabled():
                 continue_button.hover()

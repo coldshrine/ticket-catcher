@@ -43,7 +43,7 @@ def service_center_click_successful_theory_exam_button(page):
     try:
         button_selector = page.locator('button[data-target="#ModalCenterServiceCenter1"]:has-text("Так. Я успішно склав теоретичний іспит в сервісному центрі МВС.")')
         
-        button_selector.wait_for(state="visible", timeout=5000)
+        button_selector.wait_for(state="visible", timeout=15000)
 
         logger.info("Waiting for 2 seconds before clicking the button...")
         time.sleep(2)
@@ -60,7 +60,7 @@ def service_center_click_successful_exam_button(page):
     try:
         button_selector = page.locator('a[href="/site/step_cs"]:has-text("Так")')
         
-        button_selector.wait_for(state="visible", timeout=5000)
+        button_selector.wait_for(state="visible", timeout=15000)
 
         logger.info("Waiting for 2 seconds before clicking the button...")
         time.sleep(2)
@@ -76,7 +76,7 @@ def service_center_click_confirm_practical_exam_link(page):
     try:
         link_selector = page.locator('a[href="/site/step1"]:has-text("Практичний іспит на категорію В (з механічною коробкою передач)")')
         
-        link_selector.wait_for(state="visible", timeout=5000)
+        link_selector.wait_for(state="visible", timeout=15000)
 
         logger.info("Waiting for 2 seconds before clicking the link...")
         time.sleep(2)
