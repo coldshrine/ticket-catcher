@@ -7,7 +7,7 @@ import time
 import logging
 from playwright.sync_api import sync_playwright
 from constants import PASSWORD_FILE_PATH_MAC, JKS_FILE_PATH_MAC
-from instructor_supervised import (
+from common_login import (
     open_login_page,
     select_checkbox,
     click_sign_up_button,
