@@ -149,39 +149,44 @@ def main():
             page = pages[0]
             logger.info(f"First page URL: {page.url}")
 
-            # Trigger the loading of the page (if not already done)
-            # For example, navigating to a specific URL
-            page.goto("https://eq.hsc.gov.ua/")  # Replace with your target URL
-
-            # Wait for the page to load completely
-            logger.info("Waiting for the page to load...")
-            page.wait_for_load_state("domcontentloaded")  # Wait until the DOM is fully loaded
-
-            # Wait a bit to ensure everything has loaded (additional safety)
-            page.wait_for_timeout(3000)  # Optional: you can wait an additional 3 seconds
-
-            # Debug: Log the current URL after page load
-            logger.info(f"Current page URL after wait: {page.url}")
-
-            # Now check if reCAPTCHA is detected
-            if "recaptcha" in page.url or page.locator('iframe[src*="recaptcha"]').is_visible():
-                logger.info("reCAPTCHA detected. Attempting to pass it...")
-                pass_recaptcha(page)
+            # Check if the user is already on the target URL
+            if page.url == "https://eq.hsc.gov.ua/step0":
+                logger.info("User already logged in and redirected to the target page.")
+                # Proceed with the actions directly
+                zpysatys_button(page)
             else:
-                logger.info("No reCAPTCHA detected, proceeding with login.")
+                # Trigger the loading of the login page or any initial page
+                logger.info("Navigating to the login page.")
+                page.goto("https://eq.hsc.gov.ua")  # Replace with actual login page URL
 
-            # Proceed with login actions if no reCAPTCHA or after handling it
-            open_login_page(page)
-            select_checkbox(page)
-            click_sign_up_button(page)
-            click_electronic_signature_button(page)
-            upload_file_jks(page, JKS_FILE_PATH_MAC)
-            password = extract_jks_password(PASSWORD_FILE_PATH_MAC)
-            enter_password(page, password)
-            zpysatys_button(page)
+                # Wait for the page to load completely
+                logger.info("Waiting for the login page to load...")
+                page.wait_for_load_state("domcontentloaded")
+
+                # Check if reCAPTCHA is detected
+                if "recaptcha" in page.url or page.locator('iframe[src*="recaptcha"]').is_visible():
+                    logger.info("reCAPTCHA detected. Attempting to pass it...")
+                    pass_recaptcha(page)
+                else:
+                    logger.info("No reCAPTCHA detected, proceeding with login.")
+
+                # Proceed with login actions if no reCAPTCHA or after handling it
+                open_login_page(page)
+                select_checkbox(page)
+                click_sign_up_button(page)
+                click_electronic_signature_button(page)
+                upload_file_jks(page, JKS_FILE_PATH_MAC)
+                password = extract_jks_password(PASSWORD_FILE_PATH_MAC)
+                enter_password(page, password)
+
+                # After login and potential reCAPTCHA handling, check for the redirect
+                page.wait_for_url("https://eq.hsc.gov.ua/step0")  # Wait until the URL changes to the target page
+
+                logger.info("Redirected to the target page.")
+                zpysatys_button(page)
+
+            # Perform further actions, since we're now logged in or on the correct page
             select_practical_exam_link(page)
-
-            # Perform further actions
             perform_action_with_recaptcha_check(page, click_practical_exam_service_center_vehicle_button)
             perform_action_with_recaptcha_check(page, service_center_click_successful_theory_exam_button)
             perform_action_with_recaptcha_check(page, service_center_click_successful_exam_button)
