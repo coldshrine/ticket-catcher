@@ -17,23 +17,21 @@ from common_login import (
     click_and_check_talons,
 )
 
+# Setup logger
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Functions to interact with elements
 def click_practical_exam_service_center_vehicle_button(page):
     try:
         button_selector = page.locator(
             'button.btn.btn-lg.icon-btn.btn-hsc-green_:has-text("Практичний іспит (транспортний засіб сервісного центру)")'
         )
-        buttons_count = button_selector.count()
-        if buttons_count != 1:
-            logger.error(
-                "Expected 1 button but found %s for the selector.",
-                buttons_count,
-            )
-            return
-        button_selector.click()
-        logger.info("Practical exam service center vehicle button clicked successfully.")
+        if button_selector.count() == 1:
+            button_selector.click()
+            logger.info("Practical exam service center vehicle button clicked successfully.")
+        else:
+            logger.error("Expected 1 button but found %d buttons.", button_selector.count())
     except Exception as exc:
         logger.error("Failed to click the practical exam service center vehicle button: %s", exc)
 
@@ -76,38 +74,36 @@ def service_center_click_confirm_practical_exam_link(page):
     except Exception as exc:
         logger.error("Failed to click the practical exam confirmation link: %s", exc)
 
-def pass_recaptcha(page, target_url="https://eq.hsc.gov.ua/site/recaptcha", wait_time=20):
+def pass_recaptcha(page, wait_time=20):
     try:
-        logger.info(f"Current URL: {page.url}")  # Log the current URL
-        if page.url == target_url:  # Check if the current page is the reCAPTCHA page
-            logger.info(f"Waiting for page to navigate to {target_url}...")
-            page.wait_for_url(target_url, timeout=60000)  # Wait for the reCAPTCHA page
-            logger.info(f"Page navigated to {target_url}. Giving user {wait_time} seconds to pass reCAPTCHA...")
-            
-            recaptcha_button_selector = page.locator('button.btn.btn-warning:has-text("Підтвердити")')
-            logger.info(f"Locator found: {recaptcha_button_selector}")
-            
-            recaptcha_button_selector.wait_for(state="visible", timeout=30000)  # Wait for the button
-            recaptcha_button_selector.wait_for(state="enabled", timeout=30000)  # Ensure the button is enabled
-            
-            logger.info("reCAPTCHA button is now enabled and ready to be clicked.")
-            recaptcha_button_selector.click()
-            logger.info("Successfully clicked the 'Підтвердити' button.")
-        else:
-            logger.error("Not on the reCAPTCHA page. Current URL: %s", page.url)
+        logger.info(f"Current URL: {page.url}")
+        # Wait for any reCAPTCHA-related element to appear
+        recaptcha_frame = page.locator('iframe[src*="recaptcha"]')
+        recaptcha_frame.wait_for(state="attached", timeout=60000)
+        
+        logger.info("reCAPTCHA frame detected. Waiting for user interaction...")
+        # Here you might want to pause the script for manual interaction or use a solver
+        time.sleep(wait_time)  # Pause to give the user time to solve the CAPTCHA manually
+        
+        # Continue after reCAPTCHA is solved
+        page.wait_for_url(lambda url: url != page.url, timeout=60000)
+        logger.info("Successfully navigated away from the reCAPTCHA page.")
     except Exception as exc:
-        logger.error(f"Failed to handle reCAPTCHA page: {exc}")
+        logger.error(f"Failed to handle reCAPTCHA: {exc}")
+
 
 def perform_action_with_recaptcha_check(page, action, *args, **kwargs):
     try:
-        # Check if the reCAPTCHA page is loaded before performing the action
         if "recaptcha" in page.url:
+            logger.info("Detected reCAPTCHA page. Handling reCAPTCHA before proceeding.")
             pass_recaptcha(page)  # Ensure reCAPTCHA is passed before proceeding
         
+        logger.info("Executing action after passing reCAPTCHA.")
         action(page, *args, **kwargs)
     except Exception as exc:
         logger.error(f"Failed to execute action with reCAPTCHA check: {exc}")
 
+# Main function
 def main():
     with sync_playwright() as playwright:
         user_data_path = "/Users/caroline/Library/Application Support/Google/Chrome/Profile 1"
@@ -123,10 +119,9 @@ def main():
         logger.info(f"Using extension path: {extension_path}")
 
         try:
-            # Launch the browser
             browser = playwright.chromium.launch_persistent_context(
                 user_data_dir=user_data_path,
-                executable_path="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", 
+                executable_path="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
                 headless=False,
                 args=[
                     "--disable-infobars",
@@ -135,65 +130,25 @@ def main():
                 ]
             )
 
-            # Get all open pages (no need for parentheses)
-            pages = browser.pages
+            page = browser.new_page()
+            page.goto('https://eq.hsc.gov.ua/site/step')
 
-            logger.info(f"Number of pages open: {len(pages)}")
+            service_selection_header = page.locator('h3.align-middle.align-content-center:has-text("Оберіть послугу")')
+            service_selection_header.wait_for(state="visible", timeout=90000)
 
-            # If no pages are open, log and return
-            if len(pages) == 0:
-                logger.error("No pages are open. Exiting...")
-                return
-
-            # Debug: Log the URL of the first page
-            page = pages[0]
-            logger.info(f"First page URL: {page.url}")
-
-            # Check if the user is already on the target URL
-            if page.url == "https://eq.hsc.gov.ua/step0":
-                logger.info("User already logged in and redirected to the target page.")
-                # Proceed with the actions directly
-                zpysatys_button(page)
+            if service_selection_header.is_visible():
+                logger.info("Service selection page loaded. Proceeding with further actions.")
+                
+                perform_action_with_recaptcha_check(page, select_practical_exam_link)
+                perform_action_with_recaptcha_check(page, click_practical_exam_service_center_vehicle_button)
+                perform_action_with_recaptcha_check(page, service_center_click_successful_theory_exam_button)
+                perform_action_with_recaptcha_check(page, service_center_click_successful_exam_button)
+                perform_action_with_recaptcha_check(page, service_center_click_confirm_practical_exam_link)
+                perform_action_with_recaptcha_check(page, click_first_date_link)
+                perform_action_with_recaptcha_check(page, click_and_check_talons)
             else:
-                # Trigger the loading of the login page or any initial page
-                logger.info("Navigating to the login page.")
-                page.goto("https://eq.hsc.gov.ua")  # Replace with actual login page URL
-
-                # Wait for the page to load completely
-                logger.info("Waiting for the login page to load...")
-                page.wait_for_load_state("domcontentloaded")
-
-                # Check if reCAPTCHA is detected
-                if "recaptcha" in page.url or page.locator('iframe[src*="recaptcha"]').is_visible():
-                    logger.info("reCAPTCHA detected. Attempting to pass it...")
-                    pass_recaptcha(page)
-                else:
-                    logger.info("No reCAPTCHA detected, proceeding with login.")
-
-                # Proceed with login actions if no reCAPTCHA or after handling it
-                open_login_page(page)
-                select_checkbox(page)
-                click_sign_up_button(page)
-                click_electronic_signature_button(page)
-                upload_file_jks(page, JKS_FILE_PATH_MAC)
-                password = extract_jks_password(PASSWORD_FILE_PATH_MAC)
-                enter_password(page, password)
-
-                # After login and potential reCAPTCHA handling, check for the redirect
-                page.wait_for_url("https://eq.hsc.gov.ua/step0")  # Wait until the URL changes to the target page
-
-                logger.info("Redirected to the target page.")
-                zpysatys_button(page)
-
-            # Perform further actions, since we're now logged in or on the correct page
-            select_practical_exam_link(page)
-            perform_action_with_recaptcha_check(page, click_practical_exam_service_center_vehicle_button)
-            perform_action_with_recaptcha_check(page, service_center_click_successful_theory_exam_button)
-            perform_action_with_recaptcha_check(page, service_center_click_successful_exam_button)
-            perform_action_with_recaptcha_check(page, service_center_click_confirm_practical_exam_link)
-            perform_action_with_recaptcha_check(page, click_first_date_link)
-            perform_action_with_recaptcha_check(page, click_and_check_talons)
-
+                logger.error("Service selection page not loaded properly.")
+                
         except Exception as exc:
             logger.error(f"Error during the browser session: {exc}")
         finally:
