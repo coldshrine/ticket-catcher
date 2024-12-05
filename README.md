@@ -21,3 +21,4 @@
    cd ticket-catcher
 2. ```bash
    poetry install
+3. Place your personal .jks key and the password for it in .txt to the /user_files folder
