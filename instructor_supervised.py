@@ -19,6 +19,13 @@ from utils.constants import PASSWORD_FILE_PATH_MAC, JKS_FILE_PATH_MAC
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+def setup_browser():
+    """Sets up the browser and page for testing."""
+    playwright = sync_playwright().start()
+    browser = playwright.chromium.launch(headless=False)
+    page = browser.new_page()
+    return playwright, browser, page
+
 def click_practical_exam_school_vehicle_button(page):
     """Clicks the button for the practical exam with a school vehicle."""
     try:
@@ -66,15 +73,8 @@ def click_confirm_practical_exam_link(page):
     except Exception as e:
         logger.error(f"Error clicking practical exam confirmation link: {e}")
 
-def setup_browser():
-    """Sets up the browser and page for testing."""
-    playwright = sync_playwright().start()
-    browser = playwright.chromium.launch(headless=False)
-    page = browser.new_page()
-    return playwright, browser, page
-
 def main():
-    playwright, browser, page = None, None, None
+    page = None, None, None
     try:
         playwright, browser, page = setup_browser()
         open_login_page(page)
@@ -95,12 +95,6 @@ def main():
         click_and_check_talons(page)
     except Exception as e:
         logger.error(f"An error occurred during the main execution: {e}")
-    finally:
-        if browser:
-            browser.close()
-        if playwright:
-            playwright.stop()
-        logger.info("Browser session closed.")
 
 if __name__ == "__main__":
     main()

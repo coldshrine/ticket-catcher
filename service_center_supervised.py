@@ -50,84 +50,85 @@ def perform_action_with_recaptcha_check(page, action, *args, **kwargs):
 
 def validate_paths(*paths):
     """Validate that provided paths exist."""
+    all_exist = True
     for path in paths:
         if not os.path.exists(path):
             logger.error(f"Path does not exist: {path}")
-            return False
-    return True
+            all_exist = False
+    return all_exist
 
 def main():
     with sync_playwright() as playwright:
 
-        if not validate_paths(USER_DATA_PATH, EXTENSION_DATA_PATH):
-            return
+        if validate_paths(USER_DATA_PATH, EXTENSION_DATA_PATH):
+            logger.info(f"Using profile path: {USER_DATA_PATH}")
+            logger.info(f"Using extension path: {EXTENSION_DATA_PATH}")
 
-        logger.info(f"Using profile path: {USER_DATA_PATH}")
-        logger.info(f"Using extension path: {EXTENSION_DATA_PATH}")
-
-        try:
-            browser = playwright.chromium.launch_persistent_context(
-                user_data_dir=USER_DATA_PATH,
-                executable_path="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-                headless=False,
-                args=[
-                    "--disable-infobars",
-                    "--no-sandbox",
-                    f"--disable-extensions-except={EXTENSION_DATA_PATH}",
-                ],
-            )
-
-            page = browser.new_page()
-            page.goto("https://eq.hsc.gov.ua/site/step")
-
-            service_selection_header = page.locator(
-                'h3.align-middle.align-content-center:has-text("Оберіть послугу")'
-            )
-            service_selection_header.wait_for(state="visible", timeout=DEFAULT_TIMEOUT)
-
-            if service_selection_header.is_visible():
-                logger.info("Service selection page loaded. Proceeding with further actions.")
-
-                perform_action_with_recaptcha_check(page, select_practical_exam_link)
-                perform_action_with_recaptcha_check(
-                    page,
-                    safe_click,
-                    page.locator(
-                        'button.btn.btn-lg.icon-btn.btn-hsc-green_:has-text("Практичний іспит (транспортний засіб сервісного центру)")'
-                    ),
-                    "Practical exam service center vehicle button",
+            try:
+                browser = playwright.chromium.launch_persistent_context(
+                    user_data_dir=USER_DATA_PATH,
+                    executable_path="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+                    headless=False,
+                    args=[
+                        "--disable-infobars",
+                        "--no-sandbox",
+                        f"--disable-extensions-except={EXTENSION_DATA_PATH}",
+                    ],
                 )
-                perform_action_with_recaptcha_check(
-                    page,
-                    safe_click,
-                    page.locator(
-                        'button[data-target="#ModalCenterServiceCenter1"]:has-text("Так. Я успішно склав теоретичний іспит в сервісному центрі МВС.")'
-                    ),
-                    "Theory exam button",
+
+                page = browser.new_page()
+                page.goto("https://eq.hsc.gov.ua/site/step")
+
+                service_selection_header = page.locator(
+                    'h3.align-middle.align-content-center:has-text("Оберіть послугу")'
                 )
-                perform_action_with_recaptcha_check(
-                    page,
-                    safe_click,
-                    page.locator('a[href="/site/step_cs"]:has-text("Так")'),
-                    "Successful exam button",
-                )
-                perform_action_with_recaptcha_check(
-                    page,
-                    safe_click,
-                    page.locator(
-                        'a[href="/site/step1"]:has-text("Практичний іспит на категорію В (з механічною коробкою передач)")'
-                    ),
-                    "Practical exam confirmation link",
-                )
-                perform_action_with_recaptcha_check(page, click_first_date_link)
-                perform_action_with_recaptcha_check(page, click_and_check_talons)
-            else:
-                logger.error("Service selection page not loaded properly.")
-        except Exception as exc:
-            logger.error(f"Error during the browser session: {exc}")
-        finally:
-            browser.close()
-            logger.info("Browser session closed.")
+                service_selection_header.wait_for(state="visible", timeout=DEFAULT_TIMEOUT)
+
+                if service_selection_header.is_visible():
+                    logger.info("Service selection page loaded. Proceeding with further actions.")
+
+                    perform_action_with_recaptcha_check(page, select_practical_exam_link)
+                    perform_action_with_recaptcha_check(
+                        page,
+                        safe_click,
+                        page.locator(
+                            'button.btn.btn-lg.icon-btn.btn-hsc-green_:has-text("Практичний іспит (транспортний засіб сервісного центру)")'
+                        ),
+                        "Practical exam service center vehicle button",
+                    )
+                    perform_action_with_recaptcha_check(
+                        page,
+                        safe_click,
+                        page.locator(
+                            'button[data-target="#ModalCenterServiceCenter1"]:has-text("Так. Я успішно склав теоретичний іспит в сервісному центрі МВС.")'
+                        ),
+                        "Theory exam button",
+                    )
+                    perform_action_with_recaptcha_check(
+                        page,
+                        safe_click,
+                        page.locator('a[href="/site/step_cs"]:has-text("Так")'),
+                        "Successful exam button",
+                    )
+                    perform_action_with_recaptcha_check(
+                        page,
+                        safe_click,
+                        page.locator(
+                            'a[href="/site/step1"]:has-text("Практичний іспит на категорію В (з механічною коробкою передач)")'
+                        ),
+                        "Practical exam confirmation link",
+                    )
+                    perform_action_with_recaptcha_check(page, click_first_date_link)
+                    perform_action_with_recaptcha_check(page, click_and_check_talons)
+                else:
+                    logger.error("Service selection page not loaded properly.")
+            except Exception as exc:
+                logger.error(f"Error during the browser session: {exc}")
+            finally:
+                browser.close()
+                logger.info("Browser session closed.")
+        else:
+            logger.error("Required paths are invalid. Exiting.")
 
 if __name__ == "__main__":
     main()
