@@ -14,78 +14,76 @@ from common_login import (
     click_first_date_link,
     click_and_check_talons,
 )
-
-
 from constants import PASSWORD_FILE_PATH_MAC, JKS_FILE_PATH_MAC
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-
 def click_practical_exam_school_vehicle_button(page):
+    """Clicks the button for the practical exam with a school vehicle."""
     try:
         button_selector = page.get_by_role("button", name="Практичний іспит (транспортний засіб навчального закладу)")
-        
-        buttons_count = button_selector.count()
-        if buttons_count != 1:
-            logger.error(f"Expected 1 button but found {buttons_count} for selector 'Практичний іспит (транспортний засіб навчального закладу)'.")
-            return
-        
-        button_selector.click()
-        logger.info("Practical exam school vehicle button clicked successfully.")
+        if button_selector.count() == 1:
+            button_selector.click()
+            logger.info("Clicked 'Практичний іспит (транспортний засіб навчального закладу)' button.")
+        else:
+            logger.error("Expected 1 button but found multiple.")
     except Exception as e:
-        logger.error(f"Failed to click the practical exam school vehicle button: {e}")
+        logger.error(f"Error clicking 'Практичний іспит (транспортний засіб навчального закладу)' button: {e}")
 
 def click_successful_theory_exam_button(page):
+    """Clicks the button confirming successful theory exam."""
     try:
-        button_selector = page.locator('button[data-target="#ModalCenter4"]:has-text("Так. Я успішно склав теоретичний іспит в сервісному центрі МВС.")')
+        button_selector = page.locator(
+            'button[data-target="#ModalCenter4"]:has-text("Так. Я успішно склав теоретичний іспит в сервісному центрі МВС.")'
+        )
         button_selector.wait_for(state="visible")
-
-        logger.info("Waiting for 2 seconds before clicking the button...")
         time.sleep(2)
-
         button_selector.click()
-        logger.info("Successfully clicked the 'Так. Я успішно склав теоретичний іспит в сервісному центрі МВС.' button.")
+        logger.info("Clicked 'Так. Я успішно склав теоретичний іспит...' button.")
     except Exception as e:
-        logger.error(f"Failed to click the 'Так. Я успішно склав теоретичний іспит в сервісному центрі МВС.' button: {e}")
+        logger.error(f"Error clicking theory exam confirmation button: {e}")
 
 def click_successful_exam_button(page):
+    """Clicks the general 'Так' confirmation button."""
     try:
         button_selector = page.locator('button[data-target="#ModalCenter5"]:has-text("Так")')
         button_selector.wait_for(state="visible")
-
-        logger.info("Waiting for 2 seconds before clicking the button...")
         time.sleep(2)
-
         button_selector.click()
-        logger.info("Successfully clicked the 'Так' button.")
+        logger.info("Clicked 'Так' button.")
     except Exception as e:
-        logger.error(f"Failed to click the 'Так' button: {e}")
+        logger.error(f"Error clicking 'Так' button: {e}")
 
 def click_confirm_practical_exam_link(page):
+    """Clicks the practical exam confirmation link."""
     try:
         link_selector = page.locator('a[href="/site/step1"]:has-text("Практичний іспит на категорії B; BE")')
         link_selector.wait_for(state="visible")
-
-        logger.info("Waiting for 2 seconds before clicking the link...")
         time.sleep(2)
-
         link_selector.click()
-        logger.info("Successfully clicked the 'Практичний іспит на категорії B; BE' link.")
+        logger.info("Clicked 'Практичний іспит на категорії B; BE' link.")
     except Exception as e:
-        logger.error(f"Failed to click the 'Практичний іспит на категорії B; BE' link: {e}")
+        logger.error(f"Error clicking practical exam confirmation link: {e}")
+
+def setup_browser():
+    """Sets up the browser and page for testing."""
+    playwright = sync_playwright().start()
+    browser = playwright.chromium.launch(headless=False)
+    page = browser.new_page()
+    return playwright, browser, page
 
 def main():
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)
-        page = browser.new_page()
+    playwright, browser, page = None, None, None
+    try:
+        playwright, browser, page = setup_browser()
         open_login_page(page)
         select_checkbox(page)
         click_sign_up_button(page)
         click_electronic_signature_button(page)
         upload_file_jks(page, JKS_FILE_PATH_MAC)
         password = extract_jks_password(PASSWORD_FILE_PATH_MAC)
-        logger.info(f"Extracted password: {password}")
+        logger.info("Password successfully extracted.")
         enter_password(page, password)
         zpysatys_button(page)
         select_practical_exam_link(page)
@@ -95,6 +93,13 @@ def main():
         click_confirm_practical_exam_link(page)
         click_first_date_link(page)
         click_and_check_talons(page)
+    except Exception as e:
+        logger.error(f"An error occurred during the main execution: {e}")
+    finally:
+        if browser:
+            browser.close()
+        if playwright:
+            playwright.stop()
         logger.info("Browser session closed.")
 
 if __name__ == "__main__":

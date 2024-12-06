@@ -1,2 +1,3 @@
 user_files/test.jks
 user_files/password_for_jks.txt
+tests/test_constants.py
