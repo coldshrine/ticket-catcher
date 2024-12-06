@@ -1,7 +1,7 @@
 import time
 import logging
 from playwright.sync_api import sync_playwright, TimeoutError
-from common_login import (
+from utils.common_login import (
     open_login_page,
     select_checkbox,
     click_sign_up_button,
@@ -14,7 +14,7 @@ from common_login import (
     click_first_date_link,
     click_and_check_talons,
 )
-from constants import PASSWORD_FILE_PATH_MAC, JKS_FILE_PATH_MAC
+from utils.constants import PASSWORD_FILE_PATH_MAC, JKS_FILE_PATH_MAC
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)

@@ -4,7 +4,7 @@ import logging
 from playwright.sync_api import TimeoutError
 import subprocess
 
-from constants import SELECTORS
+from utils.constants import SELECTORS
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

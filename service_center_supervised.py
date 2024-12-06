@@ -2,8 +2,8 @@ import time
 import logging
 import os
 from playwright.sync_api import sync_playwright
-from constants import DEFAULT_TIMEOUT,RECAPTCHA_WAIT_TIME, USER_DATA_PATH, EXTENSION_DATA_PATH
-from common_login import (
+from utils.constants import DEFAULT_TIMEOUT,RECAPTCHA_WAIT_TIME, USER_DATA_PATH, EXTENSION_DATA_PATH
+from utils.common_login import (
     select_practical_exam_link,
     click_first_date_link,
     click_and_check_talons,
