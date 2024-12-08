@@ -1,7 +1,7 @@
 import os
 import time
 import logging
-from playwright.sync_api import TimeoutError
+from playwright.sync_api import TimeoutError, Page
 import subprocess
 
 from utils.constants import SELECTORS
@@ -9,8 +9,7 @@ from utils.constants import SELECTORS
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-def simulate_file_picker(file_path):
+def simulate_file_picker(file_path: str) -> None:
     folder_path = os.path.dirname(file_path)
     commands = [
         f'xdotool type "{folder_path}"',
@@ -21,7 +20,7 @@ def simulate_file_picker(file_path):
         subprocess.run(command, shell=True)
     logger.info(f"Simulated file picker for file: {file_path}")
 
-def wait_and_click(page, selector, timeout=15000, description=""):
+def wait_and_click(page: Page, selector: str, timeout: int = 15000, description: str = "") -> None:
     try:
         page.wait_for_selector(selector, timeout=timeout)
         element = page.locator(selector)
@@ -37,7 +36,7 @@ def wait_and_click(page, selector, timeout=15000, description=""):
         logger.error(f"Error while interacting with {description}: {e}")
         raise
 
-def open_login_page(page):
+def open_login_page(page: Page) -> None:
     try:
         page.goto("https://eq.hsc.gov.ua/")
         page.wait_for_load_state('domcontentloaded')
@@ -46,16 +45,16 @@ def open_login_page(page):
         logger.error(f"Timeout while loading login page: {e}")
         raise
 
-def select_checkbox(page):
+def select_checkbox(page: Page) -> None:
     wait_and_click(page, SELECTORS["checkbox"], description="Checkbox")
 
-def click_sign_up_button(page):
+def click_sign_up_button(page: Page) -> None:
     wait_and_click(page, SELECTORS["sign_up_button"], description="Sign-up button")
 
-def click_electronic_signature_button(page):
+def click_electronic_signature_button(page: Page) -> None:
     wait_and_click(page, SELECTORS["electronic_signature"], description="Electronic signature button")
 
-def upload_file_jks(page, file_path):
+def upload_file_jks(page: Page, file_path: str) -> None:
     try:
         file_input = page.locator('input#PKeyFileInput')
         file_input.set_input_files(file_path)
@@ -64,7 +63,7 @@ def upload_file_jks(page, file_path):
         logger.error(f"Failed to upload file {file_path}: {e}")
         raise
 
-def extract_jks_password(file_path):
+def extract_jks_password(file_path: str) -> str:
     try:
         logger.info(f"Extracting password from: {file_path}")
         with open(file_path, 'r') as file:
@@ -78,7 +77,7 @@ def extract_jks_password(file_path):
         logger.error(f"Error reading password file: {e}")
         raise
 
-def enter_password(page, password):
+def enter_password(page: Page, password: str) -> None:
     try:
         wait_and_click(page, SELECTORS["password_field"], description="Password field")
         page.fill(SELECTORS["password_field"], password)
@@ -88,16 +87,16 @@ def enter_password(page, password):
         logger.error(f"Error during password entry: {e}")
         raise
 
-def zpysatys_button(page):
+def zpysatys_button(page: Page) -> None:
     wait_and_click(page, SELECTORS["signup_button"], description="Sign-up button")
 
-def select_practical_exam_link(page):
+def select_practical_exam_link(page: Page) -> None:
     wait_and_click(page, SELECTORS["practical_exam_link"], description="Practical exam link")
 
-def click_first_date_link(page):
+def click_first_date_link(page: Page) -> None:
     wait_and_click(page, SELECTORS["first_date_button"], description="First date button")
 
-def click_and_check_talons(page):
+def click_and_check_talons(page: Page) -> None:
     try:
         right_clicks, left_clicks = 0, 0
 
