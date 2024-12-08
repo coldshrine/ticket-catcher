@@ -1,19 +1,18 @@
 import time
 import logging
 import os
-from playwright.sync_api import sync_playwright
-from utils.constants import DEFAULT_TIMEOUT,RECAPTCHA_WAIT_TIME, USER_DATA_PATH, EXTENSION_DATA_PATH
+from playwright.sync_api import Page, Locator, sync_playwright
+from utils.constants import DEFAULT_TIMEOUT, RECAPTCHA_WAIT_TIME, USER_DATA_PATH, EXTENSION_DATA_PATH
 from utils.common_login import (
     select_practical_exam_link,
     click_first_date_link,
     click_and_check_talons,
 )
 
-
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-def safe_click(locator, description, timeout=DEFAULT_TIMEOUT):
+def safe_click(locator: Locator, description: str, timeout: int = DEFAULT_TIMEOUT) -> None:
     """Helper function to wait for and click an element."""
     try:
         locator.wait_for(state="visible", timeout=timeout)
@@ -24,7 +23,7 @@ def safe_click(locator, description, timeout=DEFAULT_TIMEOUT):
     except Exception as exc:
         logger.error(f"Failed to click '{description}': {exc}")
 
-def pass_recaptcha(page, wait_time=RECAPTCHA_WAIT_TIME):
+def pass_recaptcha(page: Page, wait_time: int = RECAPTCHA_WAIT_TIME) -> None:
     """Handle reCAPTCHA manually or with a solver."""
     try:
         logger.info(f"Current URL: {page.url}")
@@ -37,7 +36,7 @@ def pass_recaptcha(page, wait_time=RECAPTCHA_WAIT_TIME):
     except Exception as exc:
         logger.error(f"Failed to handle reCAPTCHA: {exc}")
 
-def perform_action_with_recaptcha_check(page, action, *args, **kwargs):
+def perform_action_with_recaptcha_check(page: Page, action: callable, *args, **kwargs) -> None:
     """Execute an action, ensuring reCAPTCHA is resolved first if necessary."""
     try:
         if "recaptcha" in page.url:
@@ -48,7 +47,7 @@ def perform_action_with_recaptcha_check(page, action, *args, **kwargs):
     except Exception as exc:
         logger.error(f"Failed to execute action '{action.__name__}': {exc}")
 
-def validate_paths(*paths):
+def validate_paths(*paths: str) -> bool:
     """Validate that provided paths exist."""
     all_exist = True
     for path in paths:
@@ -57,9 +56,8 @@ def validate_paths(*paths):
             all_exist = False
     return all_exist
 
-def main():
+def main() -> None:
     with sync_playwright() as playwright:
-
         if validate_paths(USER_DATA_PATH, EXTENSION_DATA_PATH):
             logger.info(f"Using profile path: {USER_DATA_PATH}")
             logger.info(f"Using extension path: {EXTENSION_DATA_PATH}")
