@@ -10,9 +10,17 @@ from utils.constants import JKS_FILE_PATH, PASSWORD_FILE_PATH
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-def simulate_file_picker(file_path):
-    folder_path = os.path.dirname(file_path)
-    commands = [
+def simulate_file_picker(file_path: str) -> None:
+    """
+    Simulates interaction with a file picker by typing the folder path
+    of the provided file and simulating a 'Return' key press.
+
+    Args:
+        file_path (str): The full path to the file for which the folder path
+                         is used in the simulated file picker.
+    """
+    folder_path: str = os.path.dirname(file_path)
+    commands: List[str] = [
         f'xdotool type "{folder_path}"',
         "xdotool key Return"
     ]
@@ -21,7 +29,17 @@ def simulate_file_picker(file_path):
         subprocess.run(command, shell=True)
     logger.info(f"Simulated file picker for file: {file_path}")
 
-def open_login_page(page):
+
+def open_login_page(page: Page) -> None:
+    """
+    Opens the login page and waits for it to load completely.
+
+    Args:
+        page (Page): A Playwright Page object used to interact with the browser.
+
+    Raises:
+        TimeoutError: If the page fails to load within the timeout period.
+    """
     try:
         page.goto("https://eq.hsc.gov.ua/")
         page.wait_for_load_state('domcontentloaded')
