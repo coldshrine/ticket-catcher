@@ -30,7 +30,7 @@ def simulate_file_picker(file_path: str) -> None:
     logger.info(f"Simulated file picker for file: {file_path}")
 
 
-def open_login_page(page: Page) -> None:
+def open_login_page(page) -> None:
     """
     Opens the login page and waits for it to load completely.
 
